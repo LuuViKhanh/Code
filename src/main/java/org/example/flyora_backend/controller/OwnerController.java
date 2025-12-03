@@ -150,9 +150,8 @@ public class OwnerController {
                     .body("Chỉ Shop Owner hoặc Staff mới được phép xem danh sách sản phẩm");
         }
 
-        // Giả sử bạn đã có phương thức `searchProductsByOwner` trong service
-        // Nếu chưa, bạn cần tạo nó như hướng dẫn ở lần trả lời trước
-        List<OwnerProductListDTO> products = ownerService.searchProductsByOwner(keyword);
+        // Lấy sản phẩm của shop owner hiện tại
+        List<OwnerProductListDTO> products = ownerService.searchProductsByOwner(account.getId(), keyword);
 
         String logAction = (keyword == null || keyword.isEmpty())
                 ? "Xem tất cả sản phẩm"

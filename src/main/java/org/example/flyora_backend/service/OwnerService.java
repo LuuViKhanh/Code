@@ -18,5 +18,5 @@ public interface OwnerService {
 
     public void deleteProduct(Integer productId, Integer accountId);
     
-    List<OwnerProductListDTO> searchProductsByOwner(String keyword);
+    List<OwnerProductListDTO> searchProductsByOwner(Integer accountId, String keyword);
 }

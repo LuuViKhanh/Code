@@ -1,6 +1,7 @@
 package org.example.flyora_backend.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import org.example.flyora_backend.DTOs.CreateProductDTO;
 import org.example.flyora_backend.DTOs.OwnerProductListDTO;
 import org.example.flyora_backend.DTOs.TopProductDTO;
@@ -144,12 +145,24 @@ public class OwnerServiceImpl implements OwnerService {
     }
 
     @Override
-    public List<OwnerProductListDTO> searchProductsByOwner(String keyword) {
-        // Logic tìm kiếm: Lấy tất cả của Owner rồi filter bằng Java (hoặc dùng Scan Filter Expression)
-        // Ở đây giả sử lấy list DTO và filter trên memory
-        // Lưu ý: method này cần userId để filter đúng owner, nhưng interface bạn đưa chỉ có keyword.
-        // Tôi sẽ tạm thời trả về rỗng hoặc bạn cần sửa Interface để truyền thêm ownerId.
-        return List.of(); 
+    public List<OwnerProductListDTO> searchProductsByOwner(Integer accountId, String keyword) {
+        // 1. Lấy thông tin shop owner từ accountId
+        ShopOwnerDynamoDB owner = shopOwnerRepository.findByAccountId(accountId)
+                .orElseThrow(() -> new RuntimeException("ShopOwner không tồn tại"));
+        
+        // 2. Lấy tất cả sản phẩm của shop owner này
+        List<OwnerProductListDTO> allProducts = productRepository.findAllByShopOwnerIdOrderByIdAsc(owner.getId());
+        
+        // 3. Nếu không có keyword, trả về tất cả
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return allProducts;
+        }
+        
+        // 4. Filter theo keyword (tìm kiếm trong tên sản phẩm)
+        String searchKeyword = keyword.toLowerCase().trim();
+        return allProducts.stream()
+                .filter(product -> product.getName().toLowerCase().contains(searchKeyword))
+                .collect(Collectors.toList());
     }
     
     // =================================================================
