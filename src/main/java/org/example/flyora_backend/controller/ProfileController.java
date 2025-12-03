@@ -37,7 +37,8 @@ public class ProfileController {
             🔁 Trả về: ProfileDTO gồm thông tin cơ bản của người dùng.
         """
     )
-    public ResponseEntity<ProfileDTO> getProfile(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<ProfileDTO> getProfile(@RequestHeader(value = "Authorization", required = false) String token
+) {
         AccountDynamoDB account = jwtUtil.getAccountFromToken(token);
         accessLogService.logAction(account.getId(), "Xem hồ sơ người dùng");
         return ResponseEntity.ok(profileService.getProfile(account));
@@ -56,7 +57,8 @@ public class ProfileController {
             🔁 Trả về: 200 OK nếu thành công.
         """
     )
-    public ResponseEntity<Void> updateProfile(@RequestHeader("Authorization") String token,
+    public ResponseEntity<Void> updateProfile(@RequestHeader(value = "Authorization", required = false) String token
+,
                                               @RequestBody UpdateProfileDTO request) {
         AccountDynamoDB account = jwtUtil.getAccountFromToken(token);
         profileService.updateProfile(account, request);
@@ -77,7 +79,8 @@ public class ProfileController {
         """
     )
     public ResponseEntity<Void> changePassword(
-            @RequestHeader("Authorization") String token,
+            @RequestHeader(value = "Authorization", required = false) String token
+,
             @RequestBody ChangePasswordDTO request) {
 
 

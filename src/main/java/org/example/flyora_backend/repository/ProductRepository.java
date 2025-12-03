@@ -107,25 +107,44 @@ public class ProductRepository extends AbstractDynamoRepository<ProductDynamoDB>
     // 5. Find All By Shop Owner (Cho trang quản lý của chủ shop)
     // =================================================================
     public List<OwnerProductListDTO> findAllByShopOwnerIdOrderByIdAsc(int ownerId) {
-        // Dùng GSI: shop_owner_id-index
-        List<ProductDynamoDB> products = table.index("shop_owner_id-index")
-                .query(QueryConditional.keyEqualTo(k -> k.partitionValue(ownerId)))
-                .stream()
-                .flatMap(p -> p.items().stream())
-                .collect(Collectors.toList());
-        
-        // Sort theo ID ASC (Java logic)
-        products.sort(Comparator.comparingInt(ProductDynamoDB::getId));
+        try {
+            // Try GSI first
+            List<ProductDynamoDB> products = table.index("shop_owner_id-index")
+                    .query(QueryConditional.keyEqualTo(k -> k.partitionValue(ownerId)))
+                    .stream()
+                    .flatMap(p -> p.items().stream())
+                    .collect(Collectors.toList());
+            
+            // Sort theo ID ASC (Java logic)
+            products.sort(Comparator.comparingInt(ProductDynamoDB::getId));
 
-        List<OwnerProductListDTO> dtos = new ArrayList<>();
-        for (ProductDynamoDB p : products) {
-             String catName = getCategoryName(p.getCategoryId());
-             String img = getImageUrl(p.getId(), catName);
-             String status = (p.getStock() != null && p.getStock() > 0) ? "Còn hàng" : "Hết hàng";
-             
-             dtos.add(new OwnerProductListDTO(p.getId(), p.getName(), p.getPrice(), p.getStock(), status, img));
+            List<OwnerProductListDTO> dtos = new ArrayList<>();
+            for (ProductDynamoDB p : products) {
+                 String catName = getCategoryName(p.getCategoryId());
+                 String img = getImageUrl(p.getId(), catName);
+                 String status = (p.getStock() != null && p.getStock() > 0) ? "Còn hàng" : "Hết hàng";
+                 
+                 dtos.add(new OwnerProductListDTO(p.getId(), p.getName(), p.getPrice(), p.getStock(), status, img));
+            }
+            return dtos;
+        } catch (Exception e) {
+            // Fallback: scan all products and filter by ownerId
+            List<ProductDynamoDB> allProducts = findAll();
+            List<ProductDynamoDB> ownerProducts = allProducts.stream()
+                    .filter(p -> p.getShopOwnerId() != null && p.getShopOwnerId().equals(ownerId))
+                    .sorted(Comparator.comparingInt(ProductDynamoDB::getId))
+                    .collect(Collectors.toList());
+            
+            List<OwnerProductListDTO> dtos = new ArrayList<>();
+            for (ProductDynamoDB p : ownerProducts) {
+                 String catName = getCategoryName(p.getCategoryId());
+                 String img = getImageUrl(p.getId(), catName);
+                 String status = (p.getStock() != null && p.getStock() > 0) ? "Còn hàng" : "Hết hàng";
+                 
+                 dtos.add(new OwnerProductListDTO(p.getId(), p.getName(), p.getPrice(), p.getStock(), status, img));
+            }
+            return dtos;
         }
-        return dtos;
     }
 
     // =================================================================

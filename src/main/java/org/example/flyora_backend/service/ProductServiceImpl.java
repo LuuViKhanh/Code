@@ -9,11 +9,13 @@ import org.example.flyora_backend.DTOs.ProductBestSellerDTO;
 import org.example.flyora_backend.DTOs.ProductDetailDTO;
 import org.example.flyora_backend.DTOs.ProductFilterDTO;
 import org.example.flyora_backend.DTOs.ProductListDTO;
+import org.example.flyora_backend.dynamo.models.BirdTypeDynamoDB;
 import org.example.flyora_backend.dynamo.models.FoodDetailDynamoDB;
 import org.example.flyora_backend.dynamo.models.FurnitureDetailDynamoDB;
 import org.example.flyora_backend.dynamo.models.ProductCategoryDynamoDB;
 import org.example.flyora_backend.dynamo.models.ProductDynamoDB;
 import org.example.flyora_backend.dynamo.models.ToyDetailDynamoDB;
+import org.example.flyora_backend.repository.BirdTypeRepository;
 import org.example.flyora_backend.repository.FoodDetailRepository;
 import org.example.flyora_backend.repository.FurnitureDetailRepository;
 import org.example.flyora_backend.repository.ProductCategoryRepository;
@@ -30,6 +32,7 @@ public class ProductServiceImpl implements ProductService {
     private final FoodDetailRepository foodRepo;
     private final ToyDetailRepository toyRepo;
     private final FurnitureDetailRepository furnitureRepo;
+    private final BirdTypeRepository birdTypeRepo;
     @Override
     public List<ProductListDTO> filterProducts(ProductFilterDTO filter) {
         return productRepository.filterProducts(
@@ -76,6 +79,8 @@ public class ProductServiceImpl implements ProductService {
         String catName = categoryRepository.findById(d.getCategoryId())
                 .map(ProductCategoryDynamoDB::getName).orElse("Unknown");
 
+        String birdName = birdTypeRepo.findById(d.getBirdTypeId()).map(BirdTypeDynamoDB::getName).orElse("Unknown");
+
         // 3. LOGIC LẤY ẢNH (Mới thêm vào)
         String imageUrl = null;
         if ("FOODS".equalsIgnoreCase(catName)) {
@@ -94,10 +99,11 @@ public class ProductServiceImpl implements ProductService {
                 d.getPrice(),
                 d.getStock(),
                 catName,
-                "Unknown", // Bạn cũng nên lấy BirdType thật nếu cần
+                birdName, // Bạn cũng nên lấy BirdType thật nếu cần
                 imageUrl   // <=== ĐÃ SỬA: Thay null bằng biến imageUrl
         );
     }
+
 
     @Override
     public Integer deleteProductById(int id) {
